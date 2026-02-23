@@ -1,13 +1,12 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require 'middleware/auth.php';
+requireLogin();
 ?>
 
-<h2>Welcome <?= $_SESSION['user_name'] ?></h2>
-<p>Your role: <?= $_SESSION['user_role'] ?></p>
+<h2>Dashboard</h2>
 
+<p>Welcome <?= htmlspecialchars($_SESSION['user_name']) ?></p>
+<p>Your role: <?= htmlspecialchars($_SESSION['user_role']) ?></p>
+
+<br>
 <a href="logout.php">Logout</a>

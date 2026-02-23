@@ -1,29 +1,30 @@
 <?php
-session_start();
+require 'middleware/auth.php';
 require 'config/db.php';
+requireAdmin();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.php");
-    exit();
-}
-
-// Delete user
+// Delete user (Admin only)
 if (isset($_GET['delete'])) {
     $id = (int) $_GET['delete'];
 
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-    $stmt->execute([$id]);
+    // Prevent deleting self
+    if ($id !== $_SESSION['user_id']) {
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+    }
 
     header("Location: admin.php");
     exit();
 }
 
+// Fetch all users
 $stmt = $pdo->query("SELECT id, name, email, role FROM users");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <h2>Admin Panel</h2>
-<p>Welcome <?= $_SESSION['user_name'] ?></p>
+
+<p>Welcome Admin <?= htmlspecialchars($_SESSION['user_name']) ?></p>
 
 <table border="1" cellpadding="8">
 <tr>
@@ -37,17 +38,19 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <?php foreach ($users as $user): ?>
 <tr>
     <td><?= $user['id'] ?></td>
-    <td><?= $user['name'] ?></td>
-    <td><?= $user['email'] ?></td>
-    <td><?= $user['role'] ?></td>
+    <td><?= htmlspecialchars($user['name']) ?></td>
+    <td><?= htmlspecialchars($user['email']) ?></td>
+    <td><?= htmlspecialchars($user['role']) ?></td>
     <td>
         <?php if ($user['id'] != $_SESSION['user_id']): ?>
-            <a href="admin.php?delete=<?= $user['id'] ?>">Delete</a>
+            <a href="admin.php?delete=<?= $user['id'] ?>" 
+               onclick="return confirm('Are you sure?')">
+               Delete
+            </a>
         <?php endif; ?>
     </td>
 </tr>
 <?php endforeach; ?>
-
 </table>
 
 <br>
